@@ -1,0 +1,81 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  convert:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - name: Install Intel OpenVINO
+      run: |
+        sudo curl -o GPG-PUB-KEY-INTEL-OPENVINO-2020 https://apt.repos.intel.com/openvino/2020/GPG-PUB-KEY-INTEL-OPENVINO-2020
+        sudo apt-key add GPG-PUB-KEY-INTEL-OPENVINO-2020
+        sudo echo "deb https://apt.repos.intel.com/openvino/2020 all main" | sudo tee - a /etc/apt/sources.list.d/intel-openvino-2020.list
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends intel-openvino-dev-ubuntu18-2020.4.287
+        sudo apt-get install -y --no-install-recommends python3-setuptools
+
+    - name: Clone AutoML
+      run: |
+        git clone https://github.com/google/automl --depth 1
+        python3 -m pip install --upgrade pip
+        python3 -m pip install numpy
+        python3 -m pip install -r automl/efficientdet/requirements.txt
+
+    - name: Download checkpoints
+      run: |
+        cd automl/efficientdet
+        wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientdet/coco2/efficientdet-d4.tar.gz
+        tar -xf efficientdet-d4.tar.gz
+
+    - name: Create IR
+      run: |
+        source /opt/intel/openvino/bin/setupvars.sh
+        cd automl/efficientdet
+        python3 -m pip install tensorflow==2.1.0
+        python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
+
+        cd ../..
+        python3 -m pip install tensorflow==1.15.2
+        python3 scripts/opt_graph.py --input automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb --output efficientdet-d4_opt.pb
+
+        python3 scripts/tf_text_graph_efficientdet.py \
+          --input efficientdet-d4_opt.pb \
+          --output efficientdet-d4_opt.pbtxt \
+          --width 1024 \
+          --height 1024
+        
+        export OPENCV_DNN_IE_SERIALIZE=1
+        python3 scripts/run_opencv.py \
+          --model efficientdet-d4_opt.pb \
+          --pbtxt efficientdet-d4_opt.pbtxt \
+          --width 1024 \
+          --height 1024
+
+        mv ocv_dnn_net*.bin efficientdet-d4.bin
+        mv ocv_dnn_net*.xml efficientdet-d4.xml
+
+        python3 scripts/validate.py --version d4 --width 1024 --height 1024
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: efficientdet-d4
+        path: |
+          efficientdet-d4.bin
+          efficientdet-d4.xml

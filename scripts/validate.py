@@ -119,16 +119,19 @@ def normAssertDetections(refClassIds, refScores, refBoxes, testClassIds, testSco
 
         testClassId, testBox = testClassIds[i], testBoxes[i]
         matched = False
+        top_iou = 0
         for j in range(len(refBoxes)):
             if (not matchedRefBoxes[j]) and testClassId == refClassIds[j] and \
                abs(testScore - refScores[j]) < scores_diff:
                 interArea = inter_area(testBox, refBoxes[j])
                 iou = interArea / (area(testBox) + area(refBoxes[j]) - interArea)
-                if abs(iou - 1.0) < boxes_iou_diff:
+                top_iou = max(iou, top_iou)
+                if iou - 1.0 < boxes_iou_diff:
                     matched = True
                     matchedRefBoxes[j] = True
         if not matched:
             errMsg += '\nUnmatched prediction: class %d score %f box %s' % (testClassId, testScore, box2str(testBox))
+            errMsg += ' (highest IoU: {})'.format(top_iou)
 
     for i in range(len(refBoxes)):
         if (not matchedRefBoxes[i]) and refScores[i] > confThreshold:

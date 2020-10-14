@@ -67,7 +67,7 @@ jobs:
           --pbtxt efficientdet-d4_opt.pbtxt \
           --width 1024 \
           --height 1024
-
+        ls
         mv ocv_dnn_net*.bin efficientdet-d4.bin
         mv ocv_dnn_net*.xml efficientdet-d4.xml
 

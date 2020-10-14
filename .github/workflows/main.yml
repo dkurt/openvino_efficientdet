@@ -46,7 +46,7 @@ jobs:
 
     - name: Create IR
       run: |
-        source /opt/intel/openvino/bin/setupvars.sh
+        source /opt/intel/openvino_2021/bin/setupvars.sh
         cd automl/efficientdet
         python3 -m pip install tensorflow==2.1.0
         python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir

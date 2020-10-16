@@ -38,6 +38,10 @@ jobs:
         python3 -m pip install numpy
         python3 -m pip install -r automl/efficientdet/requirements.txt
 
+    - name: Clone OpenVINO
+      run: |
+        git clone -b efficientdet https://github.com/dkurt/openvino --depth 1
+
     - name: Download checkpoints
       run: |
         cd automl/efficientdet
@@ -46,31 +50,21 @@ jobs:
 
     - name: Create IR
       run: |
-        source /opt/intel/openvino_2021/bin/setupvars.sh
         cd automl/efficientdet
         python3 -m pip install tensorflow==2.1.0
         python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
 
         cd ../..
-        python3 -m pip install tensorflow==1.15.2
-        python3 scripts/opt_graph.py --input automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb --output efficientdet-d4_opt.pb
+        python3 -m pip install tensorflow==1.15.4
+        python3 scripts/opt_graph.py --input automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb --output efficientdet-d4.pb
 
-        python3 scripts/tf_text_graph_efficientdet.py \
-          --input efficientdet-d4_opt.pb \
-          --output efficientdet-d4_opt.pbtxt \
-          --width 1024 \
-          --height 1024
-        
-        export OPENCV_DNN_IE_SERIALIZE=1
-        python3 scripts/run_opencv.py \
-          --model efficientdet-d4_opt.pb \
-          --pbtxt efficientdet-d4_opt.pbtxt \
-          --width 1024 \
-          --height 1024
-        ls
-        mv ocv_dnn_net*.bin efficientdet-d4.bin
-        mv ocv_dnn_net*.xml efficientdet-d4.xml
+        python3 -m pip install networkx defusedxml test-generator===0.1.1
+        python3 openvino/model-optimizer/mo.py \
+          --input_model efficientdet-d4.pb \
+          --transformations_config openvino/model-optimizer/extensions/front/tf/automl_efficientdet.json \
+          --input_shape "[1, 1024, 1024, 3]"
 
+        source /opt/intel/openvino_2021/bin/setupvars.sh
         python3 scripts/validate.py --version d4 --width 1024 --height 1024
 
     - uses: actions/upload-artifact@v2

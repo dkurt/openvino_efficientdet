@@ -37,12 +37,7 @@ with tf.Session() as sess:
 #
 # Run OpenVINO
 #
-inp = inp.astype(np.float32)
-inp[:,:,0] -= 123.675
-inp[:,:,1] -= 116.28
-inp[:,:,2] -= 103.53
-inp = inp * 1.0 / 255
-inp = inp.transpose(2, 0, 1).reshape(1, 3, args.height, args.width)
+inp = inp.transpose(2, 0, 1).reshape(1, 3, args.height, args.width).astype(np.float32)
 
 
 ie = IECore()

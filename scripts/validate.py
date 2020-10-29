@@ -27,7 +27,7 @@ except:
     with tf.gfile.FastGFile(pb_file, 'rb') as f:
         graph_def.ParseFromString(f.read())
 
-with tf.Session() as sess:
+with tf.compat.v1.Session() as sess:
     sess.graph.as_default()
     tf.import_graph_def(graph_def, name='')
 

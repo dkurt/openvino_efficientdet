@@ -51,11 +51,10 @@ jobs:
     - name: Create IR
       run: |
         cd automl/efficientdet
-        python3 -m pip install tensorflow==2.1.0
+        python3 -m pip install tensorflow==2.1.0 tensorflow-model-optimization
         python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
 
         cd ../..
-        python3 -m pip install tensorflow==1.15.4
         python3 scripts/opt_graph.py --input automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb --output efficientdet-d4.pb
 
         python3 -m pip install networkx defusedxml test-generator===0.1.1

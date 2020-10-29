@@ -6,7 +6,7 @@ Follow the steps from [.github/workflows/main.yml](.github/workflows/main.yml) t
 For public models, download IRs from [GitHub Actions](https://github.com/dkurt/openvino_efficientdet/actions?query=branch%3Amaster)
 
 ## How to convert model
-1. Get optimized frozen graph. If you already have frozen `.pb` graph from AutoML framework, run [scripts/opt_graph.py](scripts/opt_graph.py) specifying path to it. TensorFlow 1.x is required.
+1. Get optimized frozen graph. If you already have frozen `.pb` graph from AutoML framework, run [scripts/opt_graph.py](scripts/opt_graph.py) specifying path to it.
 
     ```bash
     python3 scripts/opt_graph.py --input efficientdet-d4_frozen.pb --output efficientdet-d4.pb

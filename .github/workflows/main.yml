@@ -40,7 +40,7 @@ jobs:
 
     - name: Clone OpenVINO
       run: |
-        git clone -b efficientdet https://github.com/dkurt/openvino --depth 1
+        git clone -b enable_efficientdet https://github.com/lazarevevgeny/openvino --depth 1
 
     - name: Download checkpoints
       run: |
@@ -48,18 +48,18 @@ jobs:
         wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientdet/coco2/efficientdet-d4.tar.gz
         tar -xf efficientdet-d4.tar.gz
 
-    - name: Create IR
+    - name: Freeze graph
       run: |
         cd automl/efficientdet
+        git checkout 96e1fee
         python3 -m pip install tensorflow==2.1.0 tensorflow-model-optimization
         python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
 
-        cd ../..
-        python3 scripts/opt_graph.py --input automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb --output efficientdet-d4.pb
-
+    - name: Create IR
+      run: |
         python3 -m pip install networkx defusedxml test-generator===0.1.1
         python3 openvino/model-optimizer/mo.py \
-          --input_model efficientdet-d4.pb \
+          --input_model automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb \
           --transformations_config openvino/model-optimizer/extensions/front/tf/automl_efficientdet.json \
           --input_shape "[1, 1024, 1024, 3]"
 

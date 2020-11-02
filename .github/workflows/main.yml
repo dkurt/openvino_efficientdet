@@ -33,7 +33,7 @@ jobs:
 
     - name: Clone AutoML
       run: |
-        git clone https://github.com/google/automl
+        git clone -b test https://github.com/fsx950223/automl --depth 1
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy
         python3 -m pip install -r automl/efficientdet/requirements.txt
@@ -45,14 +45,12 @@ jobs:
     - name: Download checkpoints
       run: |
         cd automl/efficientdet
-        git checkout 96e1fee
         wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientdet/coco2/efficientdet-d4.tar.gz
         tar -xf efficientdet-d4.tar.gz
 
     - name: Freeze graph
       run: |
         cd automl/efficientdet
-        python3 -m pip install tensorflow==2.1.0 tensorflow-model-optimization
         python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
 
     - name: Create IR

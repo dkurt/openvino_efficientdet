@@ -51,7 +51,6 @@ jobs:
     - name: Freeze graph
       run: |
         cd automl/efficientdet
-        git checkout 96e1fee
         python3 -m pip install tensorflow==2.1.0 tensorflow-model-optimization
         python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
 

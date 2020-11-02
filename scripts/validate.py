@@ -5,8 +5,8 @@ from openvino.inference_engine import IECore
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--version', required=True)
-parser.add_argument('--width', type=int)
-parser.add_argument('--height', type=int)
+parser.add_argument('--width', type=int, required=True)
+parser.add_argument('--height', type=int, required=True)
 args = parser.parse_args()
 
 img = cv.imread('images/example.jpg')
@@ -44,7 +44,8 @@ ie = IECore()
 net = ie.read_network('efficientdet-{}.xml'.format(args.version),
                       'efficientdet-{}.bin'.format(args.version))
 exec_net = ie.load_network(net, 'CPU')
-ieOut = exec_net.infer({'image_arrays': inp})
+inp_name = next(iter(exec_net.input_info.keys()))
+ieOut = exec_net.infer({inp_name: inp})
 ieOut = next(iter(ieOut.values()))
 
 

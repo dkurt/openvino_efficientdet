@@ -61,7 +61,8 @@ jobs:
         python3 openvino/model-optimizer/mo.py \
           --input_model automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb \
           --transformations_config openvino/model-optimizer/extensions/front/tf/automl_efficientdet.json \
-          --input_shape "[1, 1024, 1024, 3]"
+          --input_shape "[1, 1024, 1024, 3]" \
+          --model_name efficientdet-d4
 
         source /opt/intel/openvino_2021/bin/setupvars.sh
         python3 scripts/validate.py --version d4 --width 1024 --height 1024

@@ -33,7 +33,7 @@ jobs:
 
     - name: Clone AutoML
       run: |
-        git clone https://github.com/google/automl --depth 1
+        git clone https://github.com/google/automl
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy
         python3 -m pip install -r automl/efficientdet/requirements.txt
@@ -45,6 +45,7 @@ jobs:
     - name: Download checkpoints
       run: |
         cd automl/efficientdet
+        git checkout 96e1fee
         wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientdet/coco2/efficientdet-d4.tar.gz
         tar -xf efficientdet-d4.tar.gz
 

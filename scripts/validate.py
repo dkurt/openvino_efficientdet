@@ -17,7 +17,7 @@ inp = cv.resize(img, (args.width, args.height))
 #
 import tensorflow as tf
 
-pb_file = 'automl/efficientdet/savedmodeldir/efficientdet-{}_frozen.pb'.format(args.version)
+pb_file = 'automl/efficientdet/savedmodeldir-{}/efficientdet-{}_frozen.pb'.format(args.version, args.version)
 graph_def = tf.compat.v1.GraphDef()
 
 try:

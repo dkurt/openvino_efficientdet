@@ -47,25 +47,48 @@ jobs:
     - name: Download checkpoints
       run: |
         cd automl/efficientdet
-        wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientdet/coco2/efficientdet-d4.tar.gz
-        tar -xf efficientdet-d4.tar.gz
+        for version in d0 d4; do
+          wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientdet/coco2/efficientdet-${version}.tar.gz
+          tar -xf efficientdet-${version}.tar.gz
+        done
 
     - name: Freeze graph
       run: |
         cd automl/efficientdet
-        python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4  --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
+        for version in d0 d4; do
+          python3 model_inspect.py \
+            --runmode=saved_model \
+            --model_name=efficientdet-${version}  \
+            --ckpt_path=efficientdet-${version} \
+            --saved_model_dir=savedmodeldir-${version}
+        done
 
     - name: Create IR
       run: |
         python3 -m pip install networkx defusedxml test-generator===0.1.1
-        python3 openvino/model-optimizer/mo.py \
-          --input_model automl/efficientdet/savedmodeldir/efficientdet-d4_frozen.pb \
-          --transformations_config openvino/model-optimizer/extensions/front/tf/automl_efficientdet.json \
-          --input_shape "[1, 1024, 1024, 3]" \
-          --model_name efficientdet-d4
-
         source /opt/intel/openvino_2021/bin/setupvars.sh
-        python3 scripts/validate.py --version d4 --width 1024 --height 1024
+
+        versions=(d0 d4)
+        sizes=(512 1024)
+        for (( i=0; i<2; i++ )); do
+          version=${versions[$i]}
+          size=${sizes[$i]}
+
+          python3 openvino/model-optimizer/mo.py \
+            --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
+            --transformations_config openvino/model-optimizer/extensions/front/tf/automl_efficientdet.json \
+            --input_shape "[1, ${size}, ${size}, 3]" \
+            --model_name efficientdet-${version}
+
+          python3 scripts/validate.py --version ${version} --width ${size} --height ${size}
+        done
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: efficientdet-d0
+        path: |
+          efficientdet-d0.bin
+          efficientdet-d0.xml
 
     - uses: actions/upload-artifact@v2
       with:

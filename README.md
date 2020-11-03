@@ -5,16 +5,19 @@ This repository demonstrates how to convert [AutoML EfficientDet](https://github
 Follow the steps from [.github/workflows/main.yml](.github/workflows/main.yml) to convert your model.
 For public models, download IRs from [GitHub Actions](https://github.com/dkurt/openvino_efficientdet/actions?query=branch%3Amaster)
 
+[![CI](https://github.com/dkurt/openvino_efficientdet/workflows/CI/badge.svg?branch=master)](https://github.com/dkurt/openvino_efficientdet/actions?query=branch%3Amaster)
+
 ## How to convert model
-1. Get optimized frozen graph. If you already have frozen `.pb` graph from AutoML framework, run [scripts/opt_graph.py](scripts/opt_graph.py) specifying path to it.
+1. Freeze graph
 
     ```bash
-    python3 scripts/opt_graph.py --input efficientdet-d4_frozen.pb --output efficientdet-d4.pb
+    cd automl/efficientdet
+    python3 model_inspect.py --runmode=saved_model --model_name=efficientdet-d4 --ckpt_path=efficientdet-d4 --saved_model_dir=savedmodeldir
     ```
 
-2. Create IR using custom OpenVINO branch
+2. Create IR
     ```bash
-    git clone -b efficientdet https://github.com/dkurt/openvino --depth 1
+    git clone https://github.com/openvinotoolkit/openvino --depth 1
 
     python3 openvino/model-optimizer/mo.py \
       --input_model efficientdet-d4.pb \

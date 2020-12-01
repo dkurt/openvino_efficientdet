@@ -47,7 +47,7 @@ jobs:
     - name: Download checkpoints
       run: |
         cd automl/efficientdet
-        for version in d0 d4; do
+        for version in d0 d1 d4; do
           wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientdet/coco2/efficientdet-${version}.tar.gz
           tar -xf efficientdet-${version}.tar.gz
         done
@@ -55,7 +55,7 @@ jobs:
     - name: Freeze graph
       run: |
         cd automl/efficientdet
-        for version in d0 d4; do
+        for version in d0 d1 d4; do
           python3 model_inspect.py \
             --runmode=saved_model \
             --model_name=efficientdet-${version}  \
@@ -68,8 +68,8 @@ jobs:
         python3 -m pip install networkx defusedxml test-generator===0.1.1
         source /opt/intel/openvino_2021/bin/setupvars.sh
 
-        versions=(d0 d4)
-        sizes=(512 1024)
+        versions=(d0 d1 d4)
+        sizes=(512 640 1024)
         for (( i=0; i<2; i++ )); do
           version=${versions[$i]}
           size=${sizes[$i]}
@@ -89,6 +89,13 @@ jobs:
         path: |
           efficientdet-d0.bin
           efficientdet-d0.xml
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: efficientdet-d1
+        path: |
+          efficientdet-d1.bin
+          efficientdet-d1.xml
 
     - uses: actions/upload-artifact@v2
       with:

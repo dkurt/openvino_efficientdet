@@ -1,4 +1,5 @@
 import argparse
+import struct
 import numpy as np
 import cv2 as cv
 from openvino.inference_engine import IECore
@@ -10,7 +11,9 @@ parser.add_argument('--height', type=int, required=True)
 args = parser.parse_args()
 
 img = cv.imread('images/example.jpg')
-inp = cv.resize(img, (args.width, args.height))
+img_h, img_w = img.shape[0], img.shape[1]
+
+conf_threshold = 0.5
 
 #
 # Run TensorFlow
@@ -31,13 +34,29 @@ with tf.compat.v1.Session() as sess:
     sess.graph.as_default()
     tf.import_graph_def(graph_def, name='')
 
+    for node in graph_def.node:
+        if node.name == 'Const_3':
+            means = struct.unpack('fff', node.attr['value'].tensor.tensor_content)
+            print('Mean values are', [m * 255 for m in means])
+
     tfOut = sess.run(sess.graph.get_tensor_by_name('detections:0'),
-                     feed_dict={'image_arrays:0': inp.reshape(1, args.height, args.width, 3)})
+                     feed_dict={'image_arrays:0': np.expand_dims(img, axis=0)})
 
 #
 # Run OpenVINO
 #
-inp = inp.transpose(2, 0, 1).reshape(1, 3, args.height, args.width).astype(np.float32)
+h, w = img.shape[0:2]
+# 1. Resize and keep aspect ratio
+assert(w >= h)
+h = int(h / w * args.height)
+inp = cv.resize(img.astype(np.float32), (args.width, h))  # It's important to perform resize for fp32
+# 2. Zero padding to the bottom
+inp = np.pad(inp, ((0, args.height - h), (0, 0), (0, 0)), 'constant')
+inp = np.expand_dims(inp.transpose(2, 0, 1), axis=0)
+# 3. Add means (to imitate zero padding after internal mean subtraction)
+inp[0,0,h:,:] += 123.67500364780426
+inp[0,1,h:,:] += 116.28000006079674
+inp[0,2,h:,:] += 103.52999702095985
 
 
 ie = IECore()
@@ -53,19 +72,10 @@ ieOut = next(iter(ieOut.values()))
 print('\nTensorFlow predictions')
 tfOut = tfOut.reshape(-1, 7)
 for detection in tfOut:
-    # Normalize coordinates
-    detection[1] /= args.height
-    detection[2] /= args.width
-    detection[3] /= args.height
-    detection[4] /= args.width
-
     conf = detection[5]
-    if conf < 0.5:
+    if conf < conf_threshold:
         continue
-    ymin = int(detection[1] * float(img.shape[0]))
-    xmin = int(detection[2] * float(img.shape[1]))
-    ymax = int(detection[3] * float(img.shape[0]))
-    xmax = int(detection[4] * float(img.shape[1]))
+    ymin, xmin, ymax, xmax = [int(v) for v in detection[1:5]]
     cv.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 127, 255), thickness=3)
     print(conf, xmin, ymin, xmax, ymax)
 
@@ -74,13 +84,15 @@ print('\nOpenVINO predictions')
 ieOut = ieOut.reshape(-1, 7)
 for detection in ieOut:
     conf = detection[2]
-    if conf < 0.5:
+    if conf < conf_threshold:
         continue
 
-    xmin = int(img.shape[1] * detection[3])
-    ymin = int(img.shape[0] * detection[4])
-    xmax = int(img.shape[1] * detection[5])
-    ymax = int(img.shape[0] * detection[6])
+    xmin = int(detection[3] * img_w)
+    xmax = int(detection[5] * img_w)
+    # Recalculate y coordinates excluding paddings
+    ymin = int(img_h * detection[4] * (args.height / h))
+    ymax = int(img_h * detection[6] * (args.height / h))
+
     cv.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 255, 0), thickness=1)
     print(conf, xmin, ymin, xmax, ymax)
 
@@ -105,7 +117,7 @@ def box2str(box):
     return '[%f x %f from (%f, %f)]' % (width, height, left, top)
 
 def normAssertDetections(refClassIds, refScores, refBoxes, testClassIds, testScores, testBoxes,
-                         confThreshold=0.5, scores_diff=1e-5, boxes_iou_diff=1e-4):
+                         confThreshold=conf_threshold, scores_diff=1e-5, boxes_iou_diff=1e-4):
     matchedRefBoxes = [False] * len(refBoxes)
     errMsg = ''
     for i in range(len(testBoxes)):

@@ -74,7 +74,7 @@ jobs:
           version=${versions[$i]}
           size=${sizes[$i]}
 
-          python3 openvino/model-optimizer/mo.py \
+          python3 openvino/model-optimizer/mo_tf.py \
             --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
             --transformations_config openvino/model-optimizer/extensions/front/tf/automl_efficientdet.json \
             --input_shape "[1, ${size}, ${size}, 3]" \

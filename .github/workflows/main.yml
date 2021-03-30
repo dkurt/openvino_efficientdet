@@ -38,7 +38,9 @@ jobs:
         git clone https://github.com/google/automl --depth 1
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy
-        python3 -m pip install -r automl/efficientdet/requirements.txt
+        cd automl
+        git log
+        python3 -m pip install -r efficientdet/requirements.txt
 
     - name: Clone OpenVINO
       run: |

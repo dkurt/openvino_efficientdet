@@ -97,11 +97,11 @@ jobs:
 
           (cd efficientdet-${version}-FP32 && \
             echo "-------- FP32 --------" && \
-            python3 scripts/validate.py --version ${version} --width ${size} --height ${size})
+            python3 ../scripts/validate.py --version ${version} --width ${size} --height ${size})
 
           (cd efficientdet-${version}-FP16 && \
             echo "-------- FP16 --------" && \
-            python3 scripts/validate.py --version ${version} --width ${size} --height ${size})
+            python3 ../scripts/validate.py --version ${version} --width ${size} --height ${size})
             
         done
 

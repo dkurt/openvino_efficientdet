@@ -35,11 +35,11 @@ jobs:
 
     - name: Clone AutoML
       run: |
-        git clone https://github.com/google/automl --depth 1
+        git clone https://github.com/google/automl
+        git checkout 96e1fee        
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy
         cd automl
-        git checkout 96e1fee
         git log
         python3 -m pip install -r efficientdet/requirements.txt
 

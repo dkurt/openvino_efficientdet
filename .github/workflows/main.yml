@@ -96,8 +96,15 @@ jobs:
             --output_dir efficientdet-${version}-FP16 --data_type FP16
         done
 
+    - name: Validate IR
+      run: |
+        source /opt/intel/openvino_2021/bin/setupvars.sh
+
+        versions=(d0 d4)
+        sizes=(512 1024)
         for (( i=0; i<2; i++ )); do
           version=${versions[$i]}
+          size=${sizes[$i]}
 
           echo "-------- Validate efficientdet-${version} FP32 IR --------"
           ln -sf efficientdet-${version}-FP32/efficientdet-${version}.bin ./efficientdet-${version}.bin
@@ -114,7 +121,6 @@ jobs:
           
           rm -f ./efficientdet-${version}.xml
           rm -f ./efficientdet-${version}.bin
-          
         done
         
     - uses: actions/upload-artifact@v2

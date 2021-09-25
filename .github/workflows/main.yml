@@ -94,8 +94,12 @@ jobs:
             --input_shape "[1, ${size}, ${size}, 3]" \
             --model_name efficientdet-${version} \
             --output_dir efficientdet-${version}-FP16 --data_type FP16
+        done
 
-          echo "-------- Validate FP32 IR --------"
+        for (( i=0; i<2; i++ )); do
+          version=${versions[$i]}
+
+          echo "-------- Validate efficientdet-${version} FP32 IR --------"
           ln -sf efficientdet-${version}-FP32/efficientdet-${version}.bin ./efficientdet-${version}.bin
           ln -sf efficientdet-${version}-FP32/efficientdet-${version}.xml ./efficientdet-${version}.xml
           python3 scripts/validate.py --version ${version} --width ${size} --height ${size}
@@ -103,15 +107,16 @@ jobs:
           rm -f ./efficientdet-${version}.xml
           rm -f ./efficientdet-${version}.bin
           
-          echo "-------- Validate FP16 IR --------"
-          python3 scripts/validate.py --version ${version} --width ${size} --height ${size}
+          echo "-------- Validate efficientdet-${version} FP16 IR --------"
           ln -sf efficientdet-${version}-FP16/efficientdet-${version}.bin ./efficientdet-${version}.bin
           ln -sf efficientdet-${version}-FP16/efficientdet-${version}.xml ./efficientdet-${version}.xml
+          python3 scripts/validate.py --version ${version} --width ${size} --height ${size}
           
           rm -f ./efficientdet-${version}.xml
           rm -f ./efficientdet-${version}.bin
+          
         done
-
+        
     - uses: actions/upload-artifact@v2
       with:
         name: efficientdet-d0

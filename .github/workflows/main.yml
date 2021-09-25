@@ -43,6 +43,7 @@ jobs:
         git log
         python3 -m pip install -r efficientdet/requirements.txt
         python3 -m pip install tensorflow==2.4.3
+        python3 -m pip install tensorflow-model-optimization
 
     - name: Clone OpenVINO
       run: |

@@ -104,7 +104,7 @@ jobs:
           rm -f ./efficientdet-${version}.bin
           
           echo "-------- Validate FP16 IR --------"
-          python3 ../scripts/validate.py --version ${version} --width ${size} --height ${size}
+          python3 scripts/validate.py --version ${version} --width ${size} --height ${size}
           ln -sf efficientdet-${version}-FP16/efficientdet-${version}.bin ./efficientdet-${version}.bin
           ln -sf efficientdet-${version}-FP16/efficientdet-${version}.xml ./efficientdet-${version}.xml
           

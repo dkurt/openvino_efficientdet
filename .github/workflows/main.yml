@@ -30,10 +30,12 @@ jobs:
         sudo apt-key add GPG-PUB-KEY-INTEL-OPENVINO-2021
         sudo echo "deb https://apt.repos.intel.com/openvino/2021 all main" | sudo tee - a /etc/apt/sources.list.d/intel-openvino-2021.list
         sudo apt update
-        sudo apt install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.4.689
+        #sudo apt install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.4.689
+        sudo apt install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.2.200
         sudo apt install -y --no-install-recommends python3-setuptools
         cd /opt/intel/openvino_2021/deployment_tools/model_optimizer/install_prerequisites
         sudo ./install_prerequisites.sh
+        python3 -m pip freeze
 
     - name: Clone AutoML
       run: |
@@ -42,10 +44,11 @@ jobs:
         #git checkout 96e1fee        
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy
-        git log
+        git log --pretty=oneline | head -25
         python3 -m pip install -r efficientdet/requirements.txt
         #python3 -m pip install tensorflow==2.4.3
         python3 -m pip install tensorflow-model-optimization
+        python3 -m pip freeze
 
     - name: Download checkpoints
       run: |
@@ -82,21 +85,40 @@ jobs:
             --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
             --transformations_config $MO_DIR/extensions/front/tf/automl_efficientdet.json \
             --input_shape "[1, ${size}, ${size}, 3]" \
-            --model_name efficientdet-${version}
+            --model_name efficientdet-${version} \
+            --output_dir efficientdet-${version}-FP32 --data_type FP32
 
-          python3 scripts/validate.py --version ${version} --width ${size} --height ${size}
+          python3 $MO_DIR/mo.py \
+            --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
+            --transformations_config $MO_DIR/extensions/front/tf/automl_efficientdet.json \
+            --input_shape "[1, ${size}, ${size}, 3]" \
+            --model_name efficientdet-${version} \
+            --output_dir efficientdet-${version}-FP16 --data_type FP16
+
+          (cd efficientdet-${version}-FP32 && \
+            echo "-------- FP32 --------" && \
+            python3 scripts/validate.py --version ${version} --width ${size} --height ${size})
+
+          (cd efficientdet-${version}-FP16 && \
+            echo "-------- FP16 --------" && \
+            python3 scripts/validate.py --version ${version} --width ${size} --height ${size})
+            
         done
 
     - uses: actions/upload-artifact@v2
       with:
         name: efficientdet-d0
         path: |
-          efficientdet-d0.bin
-          efficientdet-d0.xml
+          efficientdet-d0-FP16/efficientdet-d0.bin
+          efficientdet-d0-FP16/efficientdet-d0.xml
+          efficientdet-d0-FP32/efficientdet-d0.xml
+          efficientdet-d0-FP32/efficientdet-d0.xml
 
     - uses: actions/upload-artifact@v2
       with:
         name: efficientdet-d4
         path: |
-          efficientdet-d4.bin
-          efficientdet-d4.xml
+          efficientdet-d4-FP16/efficientdet-d4.bin
+          efficientdet-d4-FP16/efficientdet-d4.xml
+          efficientdet-d4-FP32/efficientdet-d4.bin
+          efficientdet-d4-FP32/efficientdet-d4.xml

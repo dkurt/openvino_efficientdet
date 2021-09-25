@@ -29,25 +29,23 @@ jobs:
         sudo curl -o GPG-PUB-KEY-INTEL-OPENVINO-2021 https://apt.repos.intel.com/openvino/2021/GPG-PUB-KEY-INTEL-OPENVINO-2021
         sudo apt-key add GPG-PUB-KEY-INTEL-OPENVINO-2021
         sudo echo "deb https://apt.repos.intel.com/openvino/2021 all main" | sudo tee - a /etc/apt/sources.list.d/intel-openvino-2021.list
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.2.200
-        sudo apt-get install -y --no-install-recommends python3-setuptools
+        sudo apt update
+        sudo apt install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.4.689
+        sudo apt install -y --no-install-recommends python3-setuptools
+        cd /opt/intel/openvino_2021/deployment_tools/model_optimizer/install_prerequisites
+        sudo ./install_prerequisites.sh
 
     - name: Clone AutoML
       run: |
         git clone https://github.com/google/automl
         cd automl
-        git checkout 96e1fee        
+        #git checkout 96e1fee        
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy
         git log
         python3 -m pip install -r efficientdet/requirements.txt
-        python3 -m pip install tensorflow==2.4.3
+        #python3 -m pip install tensorflow==2.4.3
         python3 -m pip install tensorflow-model-optimization
-
-    - name: Clone OpenVINO
-      run: |
-        git clone https://github.com/openvinotoolkit/openvino --depth 1
 
     - name: Download checkpoints
       run: |
@@ -72,6 +70,7 @@ jobs:
       run: |
         python3 -m pip install networkx defusedxml test-generator===0.1.1
         source /opt/intel/openvino_2021/bin/setupvars.sh
+        export MO_DIR=/opt/intel/openvino_2021/deployment_tools/model_optimizer/
 
         versions=(d0 d4)
         sizes=(512 1024)
@@ -79,9 +78,9 @@ jobs:
           version=${versions[$i]}
           size=${sizes[$i]}
 
-          python3 openvino/model-optimizer/mo.py \
+          python3 $MO_DIR/mo.py \
             --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
-            --transformations_config openvino/model-optimizer/extensions/front/tf/automl_efficientdet.json \
+            --transformations_config $MO_DIR/extensions/front/tf/automl_efficientdet.json \
             --input_shape "[1, ${size}, ${size}, 3]" \
             --model_name efficientdet-${version}
 

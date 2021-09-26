@@ -31,7 +31,6 @@ jobs:
         sudo echo "deb https://apt.repos.intel.com/openvino/2021 all main" | sudo tee - a /etc/apt/sources.list.d/intel-openvino-2021.list
         sudo apt update
         sudo apt install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.4.689
-        #sudo apt install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.2.200
         sudo apt install -y --no-install-recommends python3-setuptools
         cd /opt/intel/openvino_2021/deployment_tools/model_optimizer/install_prerequisites
         sudo ./install_prerequisites.sh
@@ -41,12 +40,10 @@ jobs:
       run: |
         git clone https://github.com/google/automl
         cd automl
-        #git checkout 96e1fee        
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy
         git log --pretty=oneline | head -25
         python3 -m pip install -r efficientdet/requirements.txt
-        #python3 -m pip install tensorflow==2.4.3
         python3 -m pip install tensorflow-model-optimization
         python3 -m pip freeze
 

@@ -41,7 +41,7 @@ jobs:
         git clone https://github.com/google/automl
         cd automl
         python3 -m pip install --upgrade pip
-        python3 -m pip install numpy
+        python3 -m pip install numpy cython
         git log --pretty=oneline | head -25
         python3 -m pip install -r efficientdet/requirements.txt
         python3 -m pip install tensorflow-model-optimization

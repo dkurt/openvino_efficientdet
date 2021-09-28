@@ -153,9 +153,11 @@ def normAssertDetections(refClassIds, refScores, refBoxes, testClassIds, testSco
 tfOut = tfOut[:,[0, 2, 1, 4, 3, 5, 6]]  # yxYX -> xyXY
 
 if args.fp16 is False:
+    print("Evaluating accuracy for FP32")
     normAssertDetections(refClassIds=tfOut[:,6], refScores=tfOut[:,5], refBoxes=tfOut[:,1:5],
                         testClassIds=ieOut[:,1] + 1, testScores=ieOut[:,2], testBoxes=ieOut[:,3:7])
 else:
+    print("Evaluating accuracy for FP16")
     normAssertDetections(refClassIds=tfOut[:,6], refScores=tfOut[:,5], refBoxes=tfOut[:,1:5],
                         testClassIds=ieOut[:,1] + 1, testScores=ieOut[:,2], testBoxes=ieOut[:,3:7],
-                        confThreshold=conf_threshold, scores_diff=1e-4)
+                        confThreshold=conf_threshold, scores_diff=1e-3)

@@ -16,6 +16,10 @@ img_h, img_w = img.shape[0], img.shape[1]
 
 conf_threshold = 0.5
 
+if args.fp16:
+    print("Evaluating accuracy for FP16")
+else:
+    print("Evaluating accuracy for FP32")
 #
 # Run TensorFlow
 #
@@ -153,11 +157,9 @@ def normAssertDetections(refClassIds, refScores, refBoxes, testClassIds, testSco
 tfOut = tfOut[:,[0, 2, 1, 4, 3, 5, 6]]  # yxYX -> xyXY
 
 if args.fp16 is False:
-    print("Evaluating accuracy for FP32")
     normAssertDetections(refClassIds=tfOut[:,6], refScores=tfOut[:,5], refBoxes=tfOut[:,1:5],
                         testClassIds=ieOut[:,1] + 1, testScores=ieOut[:,2], testBoxes=ieOut[:,3:7])
 else:
-    print("Evaluating accuracy for FP16")
     normAssertDetections(refClassIds=tfOut[:,6], refScores=tfOut[:,5], refBoxes=tfOut[:,1:5],
                         testClassIds=ieOut[:,1] + 1, testScores=ieOut[:,2], testBoxes=ieOut[:,3:7],
-                        confThreshold=conf_threshold, scores_diff=1e-4, boxes_iou_diff=1e-3)
+                        confThreshold=conf_threshold, scores_diff=0.02)

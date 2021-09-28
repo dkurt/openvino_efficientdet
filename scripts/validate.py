@@ -162,4 +162,4 @@ if args.fp16 is False:
 else:
     normAssertDetections(refClassIds=tfOut[:,6], refScores=tfOut[:,5], refBoxes=tfOut[:,1:5],
                         testClassIds=ieOut[:,1] + 1, testScores=ieOut[:,2], testBoxes=ieOut[:,3:7],
-                        confThreshold=conf_threshold, scores_diff=0.05)
+                        confThreshold=conf_threshold, scores_diff=0.01)

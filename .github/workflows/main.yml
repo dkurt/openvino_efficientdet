@@ -114,7 +114,7 @@ jobs:
           echo "-------- Validate efficientdet-${version} FP16 IR --------"
           ln -sf efficientdet-${version}-FP16/efficientdet-${version}.bin ./efficientdet-${version}.bin
           ln -sf efficientdet-${version}-FP16/efficientdet-${version}.xml ./efficientdet-${version}.xml
-          python3 scripts/validate.py --version ${version} --width ${size} --height ${size} 2>&1 | grep -iv cuda || true # don't fail on this one.
+          python3 scripts/validate.py --version ${version} --width ${size} --height ${size} --fp16 2>&1 | grep -iv cuda
           
           rm -f ./efficientdet-${version}.xml
           rm -f ./efficientdet-${version}.bin

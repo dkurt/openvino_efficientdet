@@ -24,6 +24,11 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
+    - name: Setup Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
     - name: Install Intel OpenVINO
       run: |
         sudo curl -o GPG-PUB-KEY-INTEL-OPENVINO-2021 https://apt.repos.intel.com/openvino/2021/GPG-PUB-KEY-INTEL-OPENVINO-2021

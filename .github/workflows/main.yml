@@ -30,15 +30,14 @@ jobs:
     - name: Install Intel OpenVINO
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install --no-deps openvino-dev==2021.4.2
-        python3 -m pip install openvino==2021.4.2
+        python3 -m pip install openvino-dev[tensorflow]==2022.3
 
     - name: Clone AutoML
       run: |
         git clone https://github.com/google/automl
         cd automl
         git checkout 0b0ba5ebd0860edd939465fc4152da4ff9f79b44
-        python3 -m pip install numpy cython
+        python3 -m pip install cython
         git log --pretty=oneline | head -25
         python3 -m pip install -r efficientdet/requirements.txt
         python3 -m pip install tensorflow-model-optimization
@@ -66,7 +65,7 @@ jobs:
     - name: Create IR
       run: |
         python3 -m pip install networkx defusedxml test-generator===0.1.1
-        export MO_DIR=$(dirname $(python3 -c "import mo; print(mo.__file__)"))/../
+        export MO_DIR=$(dirname $(python3 -c "import openvino; print(openvino.__file__)"))/tools/mo
 
         versions=(d0 d4)
         sizes=(512 1024)
@@ -76,14 +75,14 @@ jobs:
 
           mo \
             --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
-            --transformations_config $MO_DIR/extensions/front/tf/automl_efficientdet.json \
+            --transformations_config $MO_DIR/front/tf/automl_efficientdet.json \
             --input_shape "[1, ${size}, ${size}, 3]" \
             --model_name efficientdet-${version} \
             --output_dir efficientdet-${version}-FP32 --data_type FP32
 
           mo \
             --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
-            --transformations_config $MO_DIR/extensions/front/tf/automl_efficientdet.json \
+            --transformations_config $MO_DIR/front/tf/automl_efficientdet.json \
             --input_shape "[1, ${size}, ${size}, 3]" \
             --model_name efficientdet-${version} \
             --output_dir efficientdet-${version}-FP16 --data_type FP16

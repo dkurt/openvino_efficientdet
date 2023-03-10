@@ -45,6 +45,7 @@ jobs:
       run: |
         git clone https://github.com/google/automl
         cd automl
+        git checkout 0b0ba5ebd0860edd939465fc4152da4ff9f79b44
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy cython
         git log --pretty=oneline | head -25

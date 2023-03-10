@@ -65,7 +65,7 @@ jobs:
 
     - name: Create IR
       run: |
-        python3 -m pip install networkx defusedxml test-generator===0.1.1
+        python3 -m pip install networkx defusedxml test-generator===0.1.1 "numpy<1.20"
         export MO_DIR=$(dirname $(python -c "import mo; print(mo.__file__)"))/../
 
         versions=(d0 d4)

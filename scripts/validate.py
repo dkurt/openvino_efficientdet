@@ -57,11 +57,11 @@ h = int(h / w * args.height)
 inp = cv.resize(img.astype(np.float32), (args.width, h))  # It's important to perform resize for fp32
 # 2. Zero padding to the bottom
 inp = np.pad(inp, ((0, args.height - h), (0, 0), (0, 0)), 'constant')
-inp = np.expand_dims(inp, axis=0)
+inp = np.expand_dims(inp.transpose(2, 0, 1), axis=0)
 # 3. Add means (to imitate zero padding after internal mean subtraction)
-inp[0,h:,:,0] += 123.67500364780426
-inp[0,h:,:,1] += 116.28000006079674
-inp[0,h:,:,2] += 103.52999702095985
+inp[0,0,h:,:] += 123.67500364780426
+inp[0,1,h:,:] += 116.28000006079674
+inp[0,2,h:,:] += 103.52999702095985
 
 
 ie = IECore()

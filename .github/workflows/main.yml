@@ -9,8 +9,6 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-  schedule:
-    - cron: "00 7 * * 6"  # Run every saturday on 7:00 UTC
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -31,22 +29,15 @@ jobs:
 
     - name: Install Intel OpenVINO
       run: |
-        sudo curl -o GPG-PUB-KEY-INTEL-OPENVINO-2021 https://apt.repos.intel.com/openvino/2021/GPG-PUB-KEY-INTEL-OPENVINO-2021
-        sudo apt-key add GPG-PUB-KEY-INTEL-OPENVINO-2021
-        sudo echo "deb https://apt.repos.intel.com/openvino/2021 all main" | sudo tee - a /etc/apt/sources.list.d/intel-openvino-2021.list
-        sudo apt update
-        sudo apt install -y --no-install-recommends intel-openvino-dev-ubuntu18-2021.4.689
-        sudo apt install -y --no-install-recommends python3-setuptools
-        cd /opt/intel/openvino_2021/deployment_tools/model_optimizer/install_prerequisites
-        sudo ./install_prerequisites.sh
-        python3 -m pip freeze
+        python3 -m pip install --upgrade pip
+        python3 -m pip install openvino-dev[tensorflow]==2022.3
 
     - name: Clone AutoML
       run: |
         git clone https://github.com/google/automl
         cd automl
-        python3 -m pip install --upgrade pip
-        python3 -m pip install numpy cython
+        git checkout 0b0ba5ebd0860edd939465fc4152da4ff9f79b44
+        python3 -m pip install cython
         git log --pretty=oneline | head -25
         python3 -m pip install -r efficientdet/requirements.txt
         python3 -m pip install tensorflow-model-optimization
@@ -74,8 +65,7 @@ jobs:
     - name: Create IR
       run: |
         python3 -m pip install networkx defusedxml test-generator===0.1.1
-        source /opt/intel/openvino_2021/bin/setupvars.sh
-        export MO_DIR=/opt/intel/openvino_2021/deployment_tools/model_optimizer/
+        export MO_DIR=$(dirname $(python3 -c "import openvino; print(openvino.__file__)"))/tools/mo
 
         versions=(d0 d4)
         sizes=(512 1024)
@@ -83,16 +73,16 @@ jobs:
           version=${versions[$i]}
           size=${sizes[$i]}
 
-          python3 $MO_DIR/mo.py \
+          mo \
             --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
-            --transformations_config $MO_DIR/extensions/front/tf/automl_efficientdet.json \
+            --transformations_config $MO_DIR/front/tf/automl_efficientdet.json \
             --input_shape "[1, ${size}, ${size}, 3]" \
             --model_name efficientdet-${version} \
             --output_dir efficientdet-${version}-FP32 --data_type FP32
 
-          python3 $MO_DIR/mo.py \
+          mo \
             --input_model automl/efficientdet/savedmodeldir-${version}/efficientdet-${version}_frozen.pb \
-            --transformations_config $MO_DIR/extensions/front/tf/automl_efficientdet.json \
+            --transformations_config $MO_DIR/front/tf/automl_efficientdet.json \
             --input_shape "[1, ${size}, ${size}, 3]" \
             --model_name efficientdet-${version} \
             --output_dir efficientdet-${version}-FP16 --data_type FP16
@@ -100,8 +90,6 @@ jobs:
 
     - name: Validate IR
       run: |
-        source /opt/intel/openvino_2021/bin/setupvars.sh
-
         versions=(d0 d4)
         sizes=(512 1024)
         for (( i=0; i<2; i++ )); do

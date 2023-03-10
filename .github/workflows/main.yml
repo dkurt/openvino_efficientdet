@@ -67,7 +67,6 @@ jobs:
       run: |
         python3 -m pip install networkx defusedxml test-generator===0.1.1
         export MO_DIR=$(dirname $(python3 -c "import mo; print(mo.__file__)"))/../
-        echo $MO_DIR
 
         versions=(d0 d4)
         sizes=(512 1024)

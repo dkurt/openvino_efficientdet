@@ -9,13 +9,15 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  schedule:
+    - cron: "00 7 * * 6"  # Run every saturday on 7:00 UTC
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   convert:
     # The type of runner that the job will run on
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -36,7 +38,6 @@ jobs:
       run: |
         git clone https://github.com/google/automl
         cd automl
-        git checkout 0b0ba5ebd0860edd939465fc4152da4ff9f79b44
         python3 -m pip install cython
         git log --pretty=oneline | head -25
         python3 -m pip install -r efficientdet/requirements.txt
